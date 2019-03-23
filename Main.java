@@ -1,90 +1,47 @@
+package Simulation;
 
-import java.util.*;
-import java.io.*;
 
-public class Main {
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.PriorityQueue;
 
-    public static void main(String[] args) throws FileNotFoundException {
+public class Main
+{
+    public static final String FILE = "AddressList100.txt";
 
-        // Creating empty priority queue
-        PriorityQueue<Location> pQueue = new PriorityQueue<>();
-        File file = new File("100RandomLocations.txt");
+    public static void main(String[] args)
+    {
+        // Write 100 random addresses to a file
+        AddressIO.writeAddresses(FILE, 100);
 
-        Scanner input = new Scanner(file);
+        // Read the addresses from the file and place them in a PriorityQueue
+        PriorityQueue<Address> addresses = AddressIO.readAddresses(FILE);
 
-        while (input.hasNextLine()) {
-            String line = input.nextLine();
-            String[] tmp = line.split("\\s+");
+        // Draw the neighborhood with the addresses and distribution center shown
+        Neighborhood neighborhood = new Neighborhood();
+        neighborhood.generateNeighborhood(addresses);
+        // neighborhood.printNeighborhood();
 
-            Location location = new Location(Integer.parseInt(tmp[0]), tmp[1], tmp[2], Integer.parseInt(tmp[3]));
+        // Put the addresses into a list
+        Iterator<Address> iterator = addresses.iterator();
+        ArrayList<Address> addressList = new ArrayList<>();
+        while (iterator.hasNext())
+            addressList.add(iterator.next());
+        // Add the distribution center as the final destination
+        addressList.add(new Address(Address.DISTRIBUTION_HOUSENUM, Address.SOUTH, Address.DISTRIBUTION_STREETNUM, 1900));
 
-            pQueue.add(location);
-
+        // Create the route the truck will follow and calculate the length of the trip
+        try
+        {
+            neighborhood.addRoute(addressList);
         }
-        input.close();
-
-        /* Menu Items */
-        int choice = 0;
-        Scanner sc = new Scanner(System.in);
-        while (choice != 5) {
-            System.out.println("1. Print All Locations");
-            System.out.println("2. Print The Peek Location[Nearest]");
-            System.out.println("3. Remove Head [Nearest After Delivered]");
-            System.out.println("4. Search For Location");
-            System.out.println("5. Quit");
-            System.out.print("Choice> ");
-            choice = sc.nextInt();
-            System.out.println("--------------------");
-            switch (choice) {
-                case 1:
-
-                    Iterator itr = pQueue.iterator();
-                    while (itr.hasNext()) {
-                        System.out.println(itr.next());
-                    }
-                    break;
-
-                case 2:
-                    System.out.println(pQueue.peek());
-                    break;
-
-                case 3:
-                    pQueue.poll();
-                    System.out.print("Nearest Order Removed");
-                    break;
-
-                case 4:
-                    System.out.print("Enter house Number:");
-                    int houseNumber;
-                    houseNumber = sc.nextInt();
-                    
-                    String streetName;
-                    System.out.print("Enter street Name:");
-                    streetName = sc.next();
-                    
-                    String streetNumber;
-                    System.out.print("Enter street Number:");
-                    streetNumber = sc.next();
-                    
-  
-                    Location loc = new Location(houseNumber, streetName, streetNumber, 0);
-                    
-                    String location = sc.nextLine();
-                    boolean b = pQueue.contains(loc);
-                    System.out.println("Searching for Location: " + loc);
-                    if (b) {
-                        System.out.println("Location Found");
-                    } else {
-                        System.out.println("Oops, The location Not Found");
-                    }
-                    break;
-                case 5:
-                    System.out.println("Bye");
-                    break;
-            }
-            System.out.println("--------------------");
-
+        catch (UTurnException ute)
+        {
+            System.out.println("UTurnException occurred.");
         }
-
+        System.out.println("Route length: " + neighborhood.getRouteLength());
+        
+        Neighborhood.drawNeighborhood(addresses);
     }
 }
+
